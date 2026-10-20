@@ -13,7 +13,9 @@ export function tiktokItems(raw: unknown): unknown[] {
 export function normalizeTiktokItem(item: unknown): Video | null {
   const v = obj(item);
   const id = str(v?.aweme_id);
-  if (!v || !id) return null;
+  if (!v || !id || v.is_ad === true) return null;
+  // Photo carousels aren't videos.
+  if (str(v.url)?.includes('/photo/')) return null;
 
   const author = obj(v.author);
   const stats = obj(v.statistics);

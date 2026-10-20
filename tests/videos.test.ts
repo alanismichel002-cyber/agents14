@@ -50,7 +50,7 @@ describe('videos function', () => {
   });
 
   it('only lets platform, mode and q affect the cache or reach upstream', async () => {
-    const fetchSpy = vi.fn().mockResolvedValue(Response.json({}));
+    const fetchSpy = vi.fn().mockResolvedValue(Response.json(tiktokKeyword));
     vi.stubGlobal('fetch', fetchSpy);
     const res = await call('platform=tiktok&mode=keyword&q=cats&x=1&region=FR');
     expect(res.headers.get('netlify-vary')).toBe('query=platform|mode|q');
@@ -84,6 +84,13 @@ describe('videos function', () => {
     expect(body.errors).toEqual([
       { platform: 'instagram', code: 'out_of_credits', message: expect.any(String) },
     ]);
+  });
+
+  it('does not CDN-cache an empty result', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ shorts: [] })));
+    const res = await call('platform=youtube&mode=trending');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('no-store');
   });
 
   it('returns 429 when every platform is rate-limited', async () => {

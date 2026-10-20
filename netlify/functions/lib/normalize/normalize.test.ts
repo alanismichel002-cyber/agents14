@@ -18,11 +18,17 @@ const one = (videos: Video[]) => {
 };
 
 describe('TikTok', () => {
+  it('skips photo posts (the spec example is one)', () => {
+    expect(normalize('tiktok', tiktokTrending)).toEqual([]);
+  });
+
   it('normalizes the trending feed, taking the handle from the URL', () => {
-    expect(one(normalize('tiktok', tiktokTrending))).toMatchObject({
+    const item = tiktokTrending.aweme_list[0]!;
+    const asVideo = { aweme_list: [{ ...item, url: item.url.replace('/photo/', '/video/') }] };
+    expect(one(normalize('tiktok', asVideo))).toMatchObject({
       id: '7540000301621841183',
       platform: 'tiktok',
-      url: 'https://www.tiktok.com/@breannafriedman0/photo/7540000301621841183',
+      url: 'https://www.tiktok.com/@breannafriedman0/video/7540000301621841183',
       author: { name: 'Bre 🤍', handle: 'breannafriedman0' },
       stats: { views: 1443873, likes: 71423, comments: 646 },
       postedAt: '2025-08-18T18:52:13.000Z',
@@ -37,7 +43,8 @@ describe('TikTok', () => {
       stats: { views: 1282645, likes: 481608, comments: 187 },
     });
     expect(v.thumbnail).toMatch(/^https:\/\//);
-    expect(v.author.avatar).toMatch(/^https:\/\//);
+    // Every avatar in the spec example is HEIC, which browsers can't show.
+    expect(v.author.avatar).toBeNull();
   });
 
   it('unwraps keyword results nested in aweme_info', () => {
@@ -81,9 +88,10 @@ describe('Instagram', () => {
 });
 
 describe('YouTube', () => {
-  it('normalizes trending shorts', () => {
+  it('normalizes trending shorts, linking to the Shorts player', () => {
     expect(one(normalize('youtube', youtubeTrending))).toMatchObject({
       id: 'ou0nl5ET0HA',
+      url: 'https://www.youtube.com/shorts/ou0nl5ET0HA',
       caption: 'That hooper who says their just shoes',
       author: { name: 'Dame Universe', handle: 'dameuniverse', avatar: null },
       stats: { views: 13798774, likes: 151957, comments: 168 },
@@ -124,6 +132,51 @@ describe('robustness', () => {
     }
   });
 
+  it.each([
+    ['tiktok', { aweme_list: [{ aweme_id: '1', url: 'https://www.tiktok.com/@a/video/1' }] }],
+    ['instagram', { reels: [{ id: '1', shortcode: 'abc' }] }],
+    ['youtube', { videos: [{ id: '1' }] }],
+  ] as const)('%s keeps a minimal item with unknown fields as null', (platform, raw) => {
+    const v = one(normalize(platform, raw));
+    expect(v.stats).toEqual({ views: null, likes: null, comments: null });
+    expect(v.postedAt).toBeNull();
+    expect(v.author.avatar).toBeNull();
+  });
+
+  it('skips ads and non-video posts', () => {
+    expect(
+      normalize('tiktok', {
+        aweme_list: [{ aweme_id: '1', url: 'https://www.tiktok.com/@a/video/1', is_ad: true }],
+      }),
+    ).toEqual([]);
+    expect(
+      normalize('instagram', { posts: [{ id: '1', shortcode: 'a', is_video: false }] }),
+    ).toEqual([]);
+    expect(normalize('instagram', { reels: [{ id: '1', shortcode: 'a', media_type: 1 }] })).toEqual(
+      [],
+    );
+  });
+
+  it('prefers non-HEIC TikTok images and skips non-https entries', () => {
+    const raw = {
+      aweme_list: [
+        {
+          aweme_id: '1',
+          url: 'https://www.tiktok.com/@a/video/1',
+          author: {
+            avatar_thumb: {
+              url_list: ['http://x/a.jpeg', 'https://x/a.heic?s=1', 'https://x/a.jpeg'],
+            },
+          },
+          video: { cover: { url_list: ['https://x/c.heic'] } },
+        },
+      ],
+    };
+    const v = one(normalize('tiktok', raw));
+    expect(v.author.avatar).toBe('https://x/a.jpeg');
+    expect(v.thumbnail).toBeNull();
+  });
+
   it('drops non-https URLs so they never reach the browser', () => {
     const item = {
       id: '1',
@@ -133,7 +186,7 @@ describe('robustness', () => {
       user: { username: 'u', profile_pic_url: 'data:image/png;base64,AAAA' },
     };
     expect(one(normalize('instagram', { reels: [item] }))).toMatchObject({
-      url: 'https://www.instagram.com/reel/abc/',
+      url: 'https://www.instagram.com/p/abc/',
       thumbnail: null,
       author: { avatar: null },
     });
@@ -163,5 +216,7 @@ describe('util', () => {
     expect(isoDate('1755543133')).toBe('2025-08-18T18:52:13.000Z');
     expect(isoDate('2025-08-07T13:00:22-07:00')).toBe('2025-08-07T20:00:22.000Z');
     expect(isoDate('soon')).toBeNull();
+    expect(isoDate(1e13)).toBeNull();
+    expect(isoDate('10000000000000')).toBeNull();
   });
 });

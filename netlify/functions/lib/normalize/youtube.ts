@@ -5,7 +5,9 @@ export function youtubeItems(raw: unknown): unknown[] {
   const body = obj(raw);
   const shelfItems = arr(body?.shelves).flatMap((shelf) => arr(obj(shelf)?.items));
   // Search returns shorts, regular videos and shelves of either; trending returns shorts.
-  return [...arr(body?.shorts), ...arr(body?.videos), ...shelfItems];
+  // Items from the `shorts` list don't always carry a type, so mark them.
+  const shorts = arr(body?.shorts).map((s) => ({ type: 'short', ...obj(s) }));
+  return [...shorts, ...arr(body?.videos), ...shelfItems];
 }
 
 export function normalizeYoutubeItem(item: unknown): Video | null {

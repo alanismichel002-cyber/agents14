@@ -11,10 +11,13 @@ export function normalizeInstagramItem(item: unknown): Video | null {
   const v = obj(item);
   const id = str(v?.id) ?? str(v?.pk);
   const shortcode = str(v?.shortcode);
-  if (!v || !id) return null;
+  if (!v || !id || v.is_ad === true) return null;
+  // Only videos: search results flag them with is_video, trending reels with media_type 2.
+  if (v.is_video === false || (v.media_type != null && num(v.media_type) !== 2)) return null;
 
   const url =
-    httpsUrl(v.url) ?? (shortcode ? `https://www.instagram.com/reel/${shortcode}/` : null);
+    httpsUrl(v.url) ??
+    (shortcode ? `https://www.instagram.com/p/${encodeURIComponent(shortcode)}/` : null);
   if (!url) return null;
 
   // Trending reels carry the author in `user`; search results in `owner`.

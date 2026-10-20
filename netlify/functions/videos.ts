@@ -41,8 +41,16 @@ export default async (req: Request): Promise<Response> => {
   settled.forEach((outcome, i) => {
     const p = platforms[i]!;
     if (outcome.status === 'fulfilled') {
-      platformsOk += 1;
-      videos.push(...normalize(p, outcome.value));
+      try {
+        videos.push(...normalize(p, outcome.value));
+        platformsOk += 1;
+      } catch {
+        errors.push({
+          platform: p,
+          code: 'upstream_error',
+          message: 'Unexpected response format.',
+        });
+      }
     } else {
       const err =
         outcome.reason instanceof UpstreamError
@@ -58,8 +66,9 @@ export default async (req: Request): Promise<Response> => {
     const status = errors.some((e) => e.code === 'rate_limited') ? 429 : 502;
     return json(body, status, noStore);
   }
-  if (errors.length > 0) {
-    // Partial results are worth showing, but not worth caching.
+  if (errors.length > 0 || videos.length === 0) {
+    // Partial or empty results are worth showing, but not worth caching: an empty
+    // list can also mean the upstream response format changed.
     return json(body, 200, noStore);
   }
 

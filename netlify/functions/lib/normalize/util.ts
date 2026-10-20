@@ -37,15 +37,25 @@ export const httpsUrl = (v: unknown): string | null => {
 };
 
 export const isoDate = (v: unknown): string | null => {
-  if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+  let t: number;
+  if (typeof v === 'number') {
     // Unix seconds (TikTok create_time).
-    return new Date(v * 1000).toISOString();
+    t = v > 0 ? v * 1000 : NaN;
+  } else {
+    const s = str(v);
+    if (!s) return null;
+    t = /^\d+$/.test(s) ? Number(s) * 1000 : Date.parse(s);
   }
-  const s = str(v);
-  if (!s) return null;
-  if (/^\d+$/.test(s)) return isoDate(Number(s));
-  const t = Date.parse(s);
-  return Number.isNaN(t) ? null : new Date(t).toISOString();
+  const d = new Date(t);
+  // An out-of-range timestamp gives an invalid Date, whose toISOString() throws.
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
 };
 
-export const firstUrl = (image: unknown): string | null => httpsUrl(arr(obj(image)?.url_list)[0]);
+// Picks the first https URL from a TikTok image's url_list, preferring formats
+// browsers can show (Chrome and Firefox can't render HEIC).
+export const firstUrl = (image: unknown): string | null => {
+  const urls = arr(obj(image)?.url_list)
+    .map((u) => httpsUrl(u))
+    .filter((u): u is string => u !== null);
+  return urls.find((u) => !/\.heic(\?|$)/i.test(u)) ?? null;
+};
