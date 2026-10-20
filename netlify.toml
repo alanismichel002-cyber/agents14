@@ -9,12 +9,13 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# Local dev: `npm run dev:netlify` runs Vite and the functions together on one port.
+# Local dev: `npm run dev:netlify` builds the app, then serves dist/ and the
+# functions together on one port. It serves the production build (not Vite's dev
+# server) so the strict Content-Security-Policy below behaves exactly as in production.
 [dev]
-  command = "npm run dev"
-  targetPort = 5173
+  framework = "#static"
+  publish = "dist"
   port = 8888
-  framework = "#custom"
 
 [[headers]]
   for = "/*"

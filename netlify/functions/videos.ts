@@ -64,6 +64,8 @@ export default async (req: Request): Promise<Response> => {
   return json(body, 200, {
     'cache-control': 'public, max-age=0, must-revalidate',
     'netlify-cdn-cache-control': `public, s-maxage=${seconds}, stale-while-revalidate=300`,
+    // Only these params affect the cache key, so junk params can't bypass the cache.
+    'netlify-vary': 'query=platform|mode|q',
   });
 };
 

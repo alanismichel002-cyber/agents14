@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import handler from './videos';
+import handler from '../netlify/functions/videos';
 
 const call = (qs: string) => handler(new Request(`https://example.test/api/videos?${qs}`));
 
@@ -39,6 +39,22 @@ describe('videos function', () => {
     const body = await res.json();
     expect(body.results).toEqual([{ platform: 'youtube', raw: { items: [] } }]);
     expect(JSON.stringify(body)).not.toContain('test-key');
+  });
+
+  it('only lets platform, mode and q affect the cache or reach upstream', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal('fetch', fetchSpy);
+    const res = await call('platform=tiktok&mode=keyword&q=cats&x=1&region=FR');
+    expect(res.headers.get('netlify-vary')).toBe('query=platform|mode|q');
+    const url: URL = fetchSpy.mock.calls[0]![0];
+    expect([...url.searchParams.keys()]).toEqual(['query']);
+  });
+
+  it('makes exactly one upstream call per platform in "all" mode', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal('fetch', fetchSpy);
+    await call('platform=all&mode=trending');
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it('returns partial results, uncached, when one platform fails in "all" mode', async () => {
