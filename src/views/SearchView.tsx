@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { SearchBar } from '../components/SearchBar';
 import { isHashtag, type SearchInput } from '../lib/search';
-import { SortMenu } from '../components/SortMenu';
+import { useResultControls } from '../hooks/useResultControls';
 import { StateMessage } from '../components/StateMessage';
 import { useVideos } from '../hooks/useVideos';
-import { sortVideos, type Sort } from '../lib/sort';
 
 export function SearchView({
   search,
@@ -14,7 +13,7 @@ export function SearchView({
   search: SearchInput | null;
   onSearch: (s: SearchInput) => void;
 }) {
-  const [sort, setSort] = useState<Sort>('top');
+  const { controls, arrange, filtered, clearFilters } = useResultControls('search');
   const query = useMemo(
     () =>
       search
@@ -47,15 +46,20 @@ export function SearchView({
       />
       {search ? (
         <>
-          <div className="flex justify-end">
-            <SortMenu id="search-sort" value={sort} onChange={setSort} />
-          </div>
+          {controls}
           <ResultsPanel
             state={state}
             retry={retry}
-            emptyTitle={`No videos found for “${search.text}”`}
-            emptyHint="Try a broader keyword, a different hashtag, or another platform."
-            arrange={(videos) => sortVideos(videos, sort)}
+            emptyTitle={
+              filtered ? 'No videos match these filters' : `No videos found for “${search.text}”`
+            }
+            emptyHint={
+              filtered
+                ? undefined
+                : 'Try a broader keyword, a different hashtag, or another platform.'
+            }
+            emptyAction={filtered ? { label: 'Clear filters', onClick: clearFilters } : undefined}
+            arrange={arrange}
           />
         </>
       ) : (

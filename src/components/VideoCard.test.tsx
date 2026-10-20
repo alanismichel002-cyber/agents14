@@ -10,7 +10,7 @@ describe('VideoCard', () => {
     expect(link).toHaveAttribute('href', 'https://www.tiktok.com/@creator/video/1');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(link).toHaveAccessibleName(/Open on TikTok: A trending video/);
+    expect(link).toHaveAccessibleName(/A trending video.*opens on TikTok in a new tab/);
   });
 
   it('shows creator, caption, platform and compact stats', () => {

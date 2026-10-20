@@ -99,6 +99,21 @@ describe('TrendingView', () => {
     expect(captions[0]).toContain('High');
   });
 
+  it('filters by views and offers to clear filters', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        ok(makeResponse({ videos: [makeVideo({ stats: { views: 50, likes: 1, comments: 1 } })] })),
+      ),
+    );
+    render(<Harness />);
+    await screen.findByText('A trending video');
+    await userEvent.selectOptions(screen.getByLabelText('Views'), '1000000');
+    expect(screen.getByText('No videos match these filters')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByText('A trending video')).toBeInTheDocument();
+  });
+
   it('shows an empty state', async () => {
     vi.stubGlobal(
       'fetch',

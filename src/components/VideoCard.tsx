@@ -26,7 +26,6 @@ export function VideoCard({ video }: { video: Video }) {
         target="_blank"
         rel="noopener noreferrer"
         className="block focus:outline-none"
-        aria-label={`Open on ${PLATFORM_SHORT_LABELS[video.platform]}: ${video.caption || creator} (opens in a new tab)`}
       >
         <div className="relative aspect-[9/16] bg-slate-200">
           {video.thumbnail && !thumbFailed ? (
@@ -39,7 +38,7 @@ export function VideoCard({ video }: { video: Video }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-slate-500">
+            <div className="flex h-full items-center justify-center text-sm text-slate-700">
               No preview
             </div>
           )}
@@ -76,6 +75,9 @@ export function VideoCard({ video }: { video: Video }) {
             <Stat label="Comments" value={video.stats.comments} icon="💬" />
             {posted && <span className="ml-auto">{posted}</span>}
           </div>
+          <span className="sr-only">
+            (opens on {PLATFORM_SHORT_LABELS[video.platform]} in a new tab)
+          </span>
         </div>
       </a>
     </article>

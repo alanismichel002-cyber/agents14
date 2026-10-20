@@ -10,12 +10,14 @@ export function ResultsPanel({
   retry,
   emptyTitle,
   emptyHint,
+  emptyAction,
   arrange = (v) => v,
 }: {
   state: VideosState;
   retry: () => void;
   emptyTitle: string;
   emptyHint?: string;
+  emptyAction?: { label: string; onClick: () => void };
   arrange?: (videos: Video[]) => Video[];
 }) {
   if (state.status === 'idle') return null;
@@ -46,10 +48,14 @@ export function ResultsPanel({
         </div>
       )}
       <p aria-live="polite" className="text-sm text-slate-600">
-        {shown.length} {shown.length === 1 ? 'video' : 'videos'}
+        {shown.length === videos.length
+          ? `${shown.length} ${shown.length === 1 ? 'video' : 'videos'}`
+          : `Showing ${shown.length} of ${videos.length} videos`}
       </p>
       {shown.length === 0 ? (
-        <StateMessage title={emptyTitle}>{emptyHint}</StateMessage>
+        <StateMessage title={emptyTitle} action={emptyAction}>
+          {emptyHint}
+        </StateMessage>
       ) : (
         <VideoGrid videos={shown} />
       )}
