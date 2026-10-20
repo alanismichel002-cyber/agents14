@@ -14,17 +14,17 @@ You are the Scrape Creators API integration specialist for Trend Finder. Read `d
 
 Endpoints in scope (the allow-list — nothing else may be proxied):
 
-| Platform | Mode | Endpoint |
-| --- | --- | --- |
-| tiktok | trending | `/v1/tiktok/get-trending-feed` (`region` required) |
-| tiktok | keyword | `/v1/tiktok/search/keyword` |
-| tiktok | hashtag | `/v1/tiktok/search/hashtag` |
-| instagram | trending | `/v1/instagram/reels/trending` |
-| instagram | keyword | `/v2/instagram/reels/search` |
-| instagram | hashtag | `/v1/instagram/search/hashtag` |
-| youtube | trending | `/v1/youtube/shorts/trending` |
-| youtube | keyword | `/v1/youtube/search` |
-| youtube | hashtag | `/v1/youtube/search/hashtag` |
+| Platform  | Mode     | Endpoint                                           |
+| --------- | -------- | -------------------------------------------------- |
+| tiktok    | trending | `/v1/tiktok/get-trending-feed` (`region` required) |
+| tiktok    | keyword  | `/v1/tiktok/search/keyword`                        |
+| tiktok    | hashtag  | `/v1/tiktok/search/hashtag`                        |
+| instagram | trending | `/v1/instagram/reels/trending`                     |
+| instagram | keyword  | `/v2/instagram/reels/search`                       |
+| instagram | hashtag  | `/v1/instagram/search/hashtag`                     |
+| youtube   | trending | `/v1/youtube/shorts/trending`                      |
+| youtube   | keyword  | `/v1/youtube/search`                               |
+| youtube   | hashtag  | `/v1/youtube/search/hashtag`                       |
 
 ## How the proxy works
 

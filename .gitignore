@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.netlify
+
+# Secrets: real keys live in .env (local) or Netlify env vars, never in git
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
