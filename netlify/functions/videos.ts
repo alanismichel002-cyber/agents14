@@ -1,7 +1,8 @@
 import type { Config } from '@netlify/functions';
-import type { PlatformError, PlatformResult, VideosResponse } from '../../shared/video';
+import type { PlatformError, Video, VideosResponse } from '../../shared/video';
 import { parseVideosRequest } from './lib/validate';
 import { fetchFromScrapeCreators, UpstreamError } from './lib/scrapeCreators';
+import { normalize } from './lib/normalize';
 
 const CDN_CACHE_SECONDS = { trending: 900, search: 300 };
 
@@ -34,12 +35,14 @@ export default async (req: Request): Promise<Response> => {
     platforms.map((p) => fetchFromScrapeCreators(apiKey, p, mode, query)),
   );
 
-  const results: PlatformResult[] = [];
+  const videos: Video[] = [];
+  let platformsOk = 0;
   const errors: PlatformError[] = [];
   settled.forEach((outcome, i) => {
     const p = platforms[i]!;
     if (outcome.status === 'fulfilled') {
-      results.push({ platform: p, raw: outcome.value });
+      platformsOk += 1;
+      videos.push(...normalize(p, outcome.value));
     } else {
       const err =
         outcome.reason instanceof UpstreamError
@@ -49,9 +52,9 @@ export default async (req: Request): Promise<Response> => {
     }
   });
 
-  const body: VideosResponse = { platform, mode, query, results, errors };
+  const body: VideosResponse = { platform, mode, query, videos, errors };
 
-  if (results.length === 0) {
+  if (platformsOk === 0) {
     const status = errors.some((e) => e.code === 'rate_limited') ? 429 : 502;
     return json(body, status, noStore);
   }

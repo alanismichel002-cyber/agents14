@@ -29,16 +29,10 @@ export type ApiErrorCode =
 
 export type PlatformError = { platform: Platform; code: ApiErrorCode; message: string };
 
-export type PlatformResult = {
-  platform: Platform;
-  // Raw upstream JSON until the Milestone 2 normalizers turn it into Video[].
-  raw: unknown;
-};
-
 export type VideosResponse = {
   platform: Platform | 'all';
   mode: Mode;
   query: string | null;
-  results: PlatformResult[];
+  videos: Video[];
   errors: PlatformError[];
 };

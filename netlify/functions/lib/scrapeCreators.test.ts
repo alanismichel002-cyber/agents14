@@ -27,6 +27,7 @@ describe('fetchFromScrapeCreators', () => {
     ['a timeout', () => Promise.reject(new DOMException('t', 'TimeoutError')), 'timeout'],
     ['a network failure', () => Promise.reject(new TypeError('fetch failed')), 'upstream_error'],
     ['invalid JSON', () => Promise.resolve(new Response('<html>')), 'upstream_error'],
+    ['success: false', () => Promise.resolve(Response.json({ success: false })), 'upstream_error'],
     ['a 401', () => Promise.resolve(new Response('', { status: 401 })), 'bad_key'],
   ])('turns %s into an UpstreamError', async (_label, impl, code) => {
     const err: unknown = await run(vi.fn(impl) as unknown as typeof fetch).catch((e: unknown) => e);

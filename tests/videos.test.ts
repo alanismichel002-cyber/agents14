@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from '../netlify/functions/videos';
+import tiktokKeyword from '../netlify/functions/lib/normalize/__fixtures__/tiktok_keyword.json';
+import youtubeTrending from '../netlify/functions/lib/normalize/__fixtures__/youtube_trending.json';
+
+// A single regular video, so "all" mode returns exactly one YouTube result.
+const youtubeKeyword = {
+  videos: [{ type: 'video', id: 'abc', url: 'https://www.youtube.com/watch?v=abc', title: 'x' }],
+};
 
 const call = (qs: string) => handler(new Request(`https://example.test/api/videos?${qs}`));
 
@@ -29,7 +36,7 @@ describe('videos function', () => {
   });
 
   it('sends the key upstream and CDN-caches a successful trending response', async () => {
-    const fetchSpy = vi.fn().mockResolvedValue(Response.json({ items: [] }));
+    const fetchSpy = vi.fn().mockResolvedValue(Response.json(youtubeTrending));
     vi.stubGlobal('fetch', fetchSpy);
     const res = await call('platform=youtube&mode=trending');
     expect(res.status).toBe(200);
@@ -37,7 +44,8 @@ describe('videos function', () => {
     expect(init.headers['x-api-key']).toBe('test-key');
     expect(res.headers.get('netlify-cdn-cache-control')).toContain('s-maxage=900');
     const body = await res.json();
-    expect(body.results).toEqual([{ platform: 'youtube', raw: { items: [] } }]);
+    expect(body.videos).toHaveLength(1);
+    expect(body.videos[0]).toMatchObject({ platform: 'youtube', id: 'ou0nl5ET0HA' });
     expect(JSON.stringify(body)).not.toContain('test-key');
   });
 
@@ -64,7 +72,7 @@ describe('videos function', () => {
         Promise.resolve(
           url.pathname.includes('instagram')
             ? new Response('nope', { status: 402 })
-            : Response.json({ ok: true }),
+            : Response.json(url.pathname.includes('tiktok') ? tiktokKeyword : youtubeKeyword),
         ),
       ),
     );
@@ -72,10 +80,7 @@ describe('videos function', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await res.json();
-    expect(body.results.map((r: { platform: string }) => r.platform)).toEqual([
-      'tiktok',
-      'youtube',
-    ]);
+    expect(body.videos.map((v: { platform: string }) => v.platform)).toEqual(['tiktok', 'youtube']);
     expect(body.errors).toEqual([
       { platform: 'instagram', code: 'out_of_credits', message: expect.any(String) },
     ]);

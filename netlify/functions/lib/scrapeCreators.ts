@@ -45,9 +45,14 @@ export async function fetchFromScrapeCreators(
     throw new UpstreamError('upstream_error', 'Could not reach Scrape Creators.');
   }
   if (!res.ok) throw errorForStatus(res.status);
+  let body: unknown;
   try {
-    return await res.json();
+    body = await res.json();
   } catch {
     throw new UpstreamError('upstream_error', 'Scrape Creators returned invalid JSON.');
   }
+  if (body && typeof body === 'object' && (body as { success?: unknown }).success === false) {
+    throw new UpstreamError('upstream_error', 'Scrape Creators could not complete the request.');
+  }
+  return body;
 }
