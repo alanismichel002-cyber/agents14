@@ -31,7 +31,7 @@ Endpoints in scope (the allow-list — nothing else may be proxied):
 - One function, `netlify/functions/videos.ts`, reached at `/api/videos?platform=<tiktok|instagram|youtube|all>&mode=<trending|keyword|hashtag>&q=<text>&cursor=<opaque>`.
 - Read the key from `process.env.SCRAPE_CREATORS_API_KEY`. If it's missing, return a 500 with a clear message — never a fallback key, never log the key.
 - Validate inputs: known platform and mode only, `q` required for keyword/hashtag, trimmed, max 100 chars, leading `#` stripped for hashtag mode.
-- For `platform=all`, call the three platforms in parallel with `Promise.allSettled` and a 10 s timeout each (AbortController). Return `{ videos, errors: [{platform, message}], cursors }` so partial results still render.
+- For `platform=all`, call the three platforms in parallel with `Promise.allSettled` and a 25 s timeout each (Netlify stops sync functions at 30 s) (AbortController). Return `{ videos, errors: [{platform, message}], cursors }` so partial results still render.
 - Map upstream failures to friendly errors: 401/403 → bad key, 402 or credit errors → out of credits, 429 → rate-limited, timeout → slow upstream.
 - Set caching headers: trending `public, max-age=0` + `Netlify-CDN-Cache-Control: public, s-maxage=900, stale-while-revalidate=300`; search `s-maxage=300`. Don't cache errors.
 

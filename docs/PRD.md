@@ -100,15 +100,15 @@ Browser (React app) → Netlify CDN (cache) → Netlify Function `/api/videos` (
 
 ## Non-functional requirements
 
-| Area                   | Requirement                                                                                                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Security               | The API key lives only in the Netlify environment variable `SCRAPE_CREATORS_API_KEY`. It is never committed and never sent to the browser. The proxy accepts only an allow-list of endpoints. |
-| Abuse and cost control | Rate limit per IP on the function (e.g. 30 requests/min). Inputs validated and capped at 100 characters. No automatic polling.                                                                |
-| Caching                | Trending cached 15 min, search 5 min, at the CDN (`Cache-Control` / `Netlify-CDN-Cache-Control`).                                                                                             |
-| Performance            | First load under 2 s on 4G. JS bundle under 200 KB gzipped. Lazy-loaded thumbnails.                                                                                                           |
-| Reliability            | In an All search, a failed platform doesn't block the others; show partial results with a notice. Upstream timeout 10 s.                                                                      |
-| Accessibility          | WCAG 2.1 AA contrast, keyboard navigation, alt text on thumbnails, visible focus states.                                                                                                      |
-| Compliance             | Public data only, link back to originals, never re-host video files.                                                                                                                          |
+| Area                   | Requirement                                                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Security               | The API key lives only in the Netlify environment variable `SCRAPE_CREATORS_API_KEY`. It is never committed and never sent to the browser. The proxy accepts only an allow-list of endpoints.       |
+| Abuse and cost control | Rate limit per IP on the function (e.g. 30 requests/min). Inputs validated and capped at 100 characters. No automatic polling.                                                                      |
+| Caching                | Trending cached 15 min, search 5 min, at the CDN (`Cache-Control` / `Netlify-CDN-Cache-Control`).                                                                                                   |
+| Performance            | First load under 2 s on 4G. JS bundle under 200 KB gzipped. Lazy-loaded thumbnails.                                                                                                                 |
+| Reliability            | In an All search, a failed platform doesn't block the others; show partial results with a notice. Upstream timeout 25 s (Scrape Creators often takes 7–15 s; Netlify stops sync functions at 30 s). |
+| Accessibility          | WCAG 2.1 AA contrast, keyboard navigation, alt text on thumbnails, visible focus states.                                                                                                            |
+| Compliance             | Public data only, link back to originals, never re-host video files.                                                                                                                                |
 
 ## Success metrics
 
@@ -135,7 +135,7 @@ Browser (React app) → Netlify CDN (cache) → Netlify Function `/api/videos` (
 | Credit costs grow on a public site               | CDN caching, per-IP rate limits, optional daily cap in the function      |
 | Response formats differ or change without notice | Per-platform normalizers with fallbacks, tests on saved sample responses |
 | Thumbnail URLs expire or block hotlinking        | Placeholder on error; image proxy later if needed                        |
-| All search waits on three upstream calls         | Parallel calls, 10 s timeout, partial results                            |
+| All search waits on three upstream calls         | Parallel calls, 25 s timeout, partial results                            |
 
 Open questions:
 

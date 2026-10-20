@@ -1,7 +1,8 @@
 import type { ApiErrorCode, Mode, Platform } from '../../../shared/video';
 import { buildUpstreamUrl } from './endpoints';
 
-export const UPSTREAM_TIMEOUT_MS = 10_000;
+// Scrape Creators often takes 7–15 s (seen up to 30 s); Netlify stops sync functions at 30 s.
+export const UPSTREAM_TIMEOUT_MS = 25_000;
 
 export class UpstreamError extends Error {
   constructor(
