@@ -144,3 +144,20 @@ Open questions:
 - [ ] Public site, or behind a simple password?
 - [ ] Changes to `main` via pull requests or direct merges?
 - [ ] Final app name and domain?
+
+## Launch notes (2026-10-20)
+
+Built: FR-1 to FR-8 and FR-10. Not built: FR-9 (inline playback) and FR-11 (load more); cards link to the originals instead.
+
+Facts found while building that affect the criteria above:
+
+- **Latency:** live Scrape Creators calls took 7–30 s (one returned a 500). The "under 5 s" trending target can only be met on a CDN cache hit; the first request after the 15-minute cache expires takes 7–15 s. The function waits up to 25 s (Netlify's sync limit is 30 s; check the site's actual limit after deploy).
+- **Instagram search has no view counts.** Keyword and hashtag responses include likes and comments only, so Instagram search results sort last by views. Trending reels do include views.
+- **Shareable URLs:** `/?view=search&q=…&p=…`; a link with only `q` (e.g. `/?q=%23skincare&p=tiktok`) also opens search.
+- **TikTok trending region** defaults to `US` (`netlify/functions/lib/endpoints.ts`).
+
+Decisions for the owner:
+
+- [ ] Accept "under 5 s" as applying to cached loads only?
+- [ ] Accept that Instagram search can't be sorted by views?
+- [ ] Keep `US` as the TikTok trending region?

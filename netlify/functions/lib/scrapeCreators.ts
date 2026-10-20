@@ -49,7 +49,11 @@ export async function fetchFromScrapeCreators(
   let body: unknown;
   try {
     body = await res.json();
-  } catch {
+  } catch (err) {
+    // The timeout can also fire while the body is still downloading.
+    if (err instanceof DOMException && err.name === 'TimeoutError') {
+      throw new UpstreamError('timeout', 'Scrape Creators took too long to respond.');
+    }
     throw new UpstreamError('upstream_error', 'Scrape Creators returned invalid JSON.');
   }
   if (body && typeof body === 'object' && (body as { success?: unknown }).success === false) {

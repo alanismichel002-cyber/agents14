@@ -11,6 +11,9 @@ import instagramHashtag from './__fixtures__/instagram_hashtag.json';
 import youtubeTrending from './__fixtures__/youtube_trending.json';
 import youtubeKeyword from './__fixtures__/youtube_keyword.json';
 import youtubeHashtag from './__fixtures__/youtube_hashtag.json';
+import liveTiktok from './__fixtures__/live_tiktok_trending.json';
+import liveInstagram from './__fixtures__/live_instagram_trending.json';
+import liveYoutube from './__fixtures__/live_youtube_trending.json';
 
 const one = (videos: Video[]) => {
   expect(videos.length).toBeGreaterThan(0);
@@ -122,6 +125,25 @@ describe('YouTube', () => {
       shorts: [{ type: 'short', id: 'a' }],
     };
     expect(normalize('youtube', raw).map((v) => v.id)).toEqual(['a']);
+  });
+});
+
+describe('real API responses (trimmed, captured 2026-10-20)', () => {
+  it.each([
+    ['tiktok', liveTiktok],
+    ['instagram', liveInstagram],
+    ['youtube', liveYoutube],
+  ] as const)('%s trending maps every field', (platform, raw) => {
+    const videos = normalize(platform, raw);
+    expect(videos.length).toBeGreaterThan(0);
+    for (const v of videos) {
+      expect(v.url).toMatch(/^https:\/\//);
+      expect(v.thumbnail).toMatch(/^https:\/\//);
+      expect(v.author.handle).not.toBe('');
+      expect(v.stats.views).toEqual(expect.any(Number));
+      expect(v.stats.likes).toEqual(expect.any(Number));
+      expect(v.postedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    }
   });
 });
 

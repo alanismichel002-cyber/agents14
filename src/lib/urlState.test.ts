@@ -14,6 +14,19 @@ describe('url state', () => {
     expect(parseUrl(url.slice(1))).toEqual(state);
   });
 
+  it('opens search for a link with q but no view (the PRD example)', () => {
+    expect(parseUrl('?q=%23skincare&p=tiktok')).toEqual({
+      view: 'search',
+      search: { platform: 'tiktok', text: '#skincare' },
+    });
+  });
+
+  it('does not run invalid searches from a link', () => {
+    for (const q of ['%23', '%23a%20b', 'x'.repeat(101)]) {
+      expect(parseUrl(`?view=search&q=${q}`)).toEqual({ view: 'search', search: null });
+    }
+  });
+
   it('ignores unknown platforms and empty queries', () => {
     expect(parseUrl('?p=myspace')).toEqual({ view: 'trending', platform: 'tiktok' });
     expect(parseUrl('?view=search&q=%20&p=nope')).toEqual({ view: 'search', search: null });

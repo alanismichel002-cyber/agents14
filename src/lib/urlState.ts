@@ -1,5 +1,5 @@
 import { PLATFORMS, type Platform } from '../../shared/video';
-import type { SearchInput } from './search';
+import { validateSearch, type SearchInput } from './search';
 
 export type AppState =
   { view: 'trending'; platform: Platform } | { view: 'search'; search: SearchInput | null };
@@ -8,13 +8,15 @@ const isPlatform = (v: string | null): v is Platform =>
   v !== null && (PLATFORMS as readonly string[]).includes(v);
 
 // URLs look like /?p=youtube (trending) or /?view=search&q=%23skincare&p=all.
+// A link with q but no view (e.g. /?q=%23skincare&p=tiktok) also opens search.
 export function parseUrl(search: string): AppState {
   const params = new URLSearchParams(search);
   const p = params.get('p');
-  if (params.get('view') === 'search') {
-    const q = (params.get('q') ?? '').trim().slice(0, 100);
+  if (params.get('view') === 'search' || params.has('q')) {
+    const q = (params.get('q') ?? '').trim();
     const platform = p === 'all' || isPlatform(p) ? p : 'all';
-    return { view: 'search', search: q ? { platform, text: q } : null };
+    // A link with an invalid search opens the empty search page instead of running it.
+    return { view: 'search', search: validateSearch(q) ? null : { platform, text: q } };
   }
   return { view: 'trending', platform: isPlatform(p) ? p : 'tiktok' };
 }

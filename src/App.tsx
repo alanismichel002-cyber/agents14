@@ -38,6 +38,10 @@ export default function App() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <a
             href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate({ view: 'trending', platform: 'tiktok' });
+            }}
             className="flex items-center gap-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
           >
             <img src="/favicon.svg" alt="" className="h-7 w-7" />
